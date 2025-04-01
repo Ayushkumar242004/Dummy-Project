@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         {
           parts: [
             {
-              text: `Convert the following natural language query to a SQL query for ${databaseType} database:\n\n"${text}"\n\nReturn only the SQL query without any explanations or markdown formatting.`,
+              text: `Convert the following natural language query to a SQL query for ${databaseType} database:\n\n"${text}"\n\nReturn only the SQL query without any explanations or markdown formatting. If Query seems incomplete then autocomplete it.`,
             },
           ],
         },
