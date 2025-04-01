@@ -75,45 +75,45 @@ export function VoiceInput() {
 
   const processAudioData = async () => {
     if (audioChunksRef.current.length === 0) {
-      setError("No audio recorded. Please try again.")
-      return
+      setError("No audio recorded. Please try again.");
+      return;
     }
-
-    setIsProcessing(true)
-
+  
+    setIsProcessing(true);
+  
     try {
       // Create audio blob and form data
-      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" })
-      const formData = new FormData()
-      formData.append("audio", audioBlob, "recording.wav")
-
-      // Send to Google Speech-to-Text API
+      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "recording.wav");
+  
+      // Send to your backend API
       const response = await fetch("/api/speech-to-text", {
         method: "POST",
         body: formData,
-      })
-
+      });
+  
       if (!response.ok) {
-        throw new Error("Speech-to-text processing failed")
+        throw new Error("Speech-to-text processing failed");
       }
-
-      const data = await response.json()
-
+  
+      const data = await response.json();
+  
       if (data.transcription) {
-        setQuery(data.transcription)
-
+        setQuery(data.transcription);
+  
         // Convert to SQL using OpenAI
-        await convertToSQL(data.transcription)
+        await convertToSQL(data.transcription);
       } else {
-        setError("Could not transcribe audio. Please try again or use text input.")
+        setError("Could not transcribe audio. Please try again or use text input.");
       }
     } catch (err) {
-      console.error("Error processing audio:", err)
-      setError("Failed to process audio. Please try again or use text input.")
+      console.error("Error processing audio:", err);
+      setError("Failed to process audio. Please try again or use text input.");
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   const convertToSQL = async (text: string) => {
     try {
@@ -192,21 +192,21 @@ export function VoiceInput() {
       const response = await fetch("/api/speech-to-text", {
         method: "POST",
         body: formData,
-      })
-
+      });
+  
       if (!response.ok) {
-        throw new Error("Speech-to-text processing failed")
+        throw new Error("Speech-to-text processing failed");
       }
-
-      const data = await response.json()
+  
+      const data = await response.json();
 
       if (data.transcription) {
-        setQuery(data.transcription)
-
+        setQuery(data.transcription);
+  
         // Convert to SQL using OpenAI
-        await convertToSQL(data.transcription)
+        await convertToSQL(data.transcription);
       } else {
-        setError("Could not transcribe audio file. Please try another file or use text input.")
+        setError("Could not transcribe audio. Please try again or use text input.");
       }
     } catch (err) {
       console.error("Error processing audio file:", err)
@@ -273,7 +273,7 @@ export function VoiceInput() {
                     : "Press the microphone button and speak your query"}
               </p>
               {!session && (
-                <Alert variant="warning" className="mt-4">
+                <Alert variant="default" className="mt-4">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Authentication Required</AlertTitle>
                   <AlertDescription>Please log in to use voice input features.</AlertDescription>
@@ -316,7 +316,7 @@ export function VoiceInput() {
               )}
             </Button>
             {!session && (
-              <Alert variant="warning">
+              <Alert variant="default">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Authentication Required</AlertTitle>
                 <AlertDescription>Please log in to use text-to-SQL features.</AlertDescription>
@@ -359,7 +359,7 @@ export function VoiceInput() {
               </Button>
             </div>
             {!session && (
-              <Alert variant="warning">
+              <Alert variant="default">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Authentication Required</AlertTitle>
                 <AlertDescription>Please log in to use audio file processing features.</AlertDescription>

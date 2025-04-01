@@ -63,7 +63,8 @@ export default function Dashboard() {
           <Tabs defaultValue={dbConnected ? "query" : "connect"} className="w-full">
             <TabsList className="mb-6">
               <TabsTrigger value="connect">Database Connection</TabsTrigger>
-              <TabsTrigger value="query" disabled={!dbConnected}>
+              {/* <TabsTrigger value="query" disabled={!dbConnected}> */}
+              <TabsTrigger value="query">
                 Voice to SQL
               </TabsTrigger>
             </TabsList>
