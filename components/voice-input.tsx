@@ -148,22 +148,58 @@ export function VoiceInput() {
 
   const handleSubmitQuery = async () => {
     if (!query.trim()) {
-      setError("Please enter a query first.")
-      return
+      setError("Please enter a query first.");
+      return;
     }
-
-    setIsProcessing(true)
-    setError(null)
-
+  
+    setIsProcessing(true);
+    setError(null);
+  
     try {
-      await convertToSQL(query)
+      // Fetch database connection details from localStorage
+      const dbConnection = JSON.parse(localStorage.getItem("dbConnection") || "{}");
+  
+      if (!dbConnection || !dbConnection.type || !dbConnection.host) {
+        setError("Database connection details are missing. Please connect to a database first.");
+        return;
+      }
+  
+      // Prepare the request body
+      const requestBody = {
+        ...dbConnection,
+        query,
+      };
+  
+      // Send the API request
+      const response = await fetch("http://localhost:3000/api/database/execute", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        toast({
+          title: "Query executed",
+          description: "Your query was executed successfully.",
+        });
+  
+        // Log the response in the terminal
+        console.log("Query Response:", data);
+        localStorage.setItem("Query", query);
+      } else {
+        setError(data.error || "Failed to execute query. Please check your query and try again.");
+      }
     } catch (err) {
-      console.error("Error submitting query:", err)
-      setError("Failed to process query. Please try again.")
+      console.error("Error executing query:", err);
+      setError("An error occurred while executing the query. Please try again.");
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]

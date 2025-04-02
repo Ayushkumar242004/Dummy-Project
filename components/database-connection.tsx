@@ -64,8 +64,12 @@ export function DatabaseConnection() {
         localStorage.setItem(
           "dbConnection",
           JSON.stringify({
-            ...values,
-            password: "********", // Don't store actual password
+            type: values.type,
+            host: values.host,
+            port: values.port,
+            database: values.database,
+            username: values.username,
+            password: values.password, // Store password securely if needed
           }),
         )
       } else {
