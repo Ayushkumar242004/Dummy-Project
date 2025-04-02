@@ -1,117 +1,111 @@
-import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "../../auth/[...nextauth]/route"
-import mysql from "mysql2/promise"
-import { Pool as PostgresPool } from "pg"
-import { MongoClient } from "mongodb"
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../auth/[...nextauth]/route";
+import mysql from "mysql2/promise";
+import { Pool as PostgresPool } from "pg";
 
 export async function POST(req: Request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      console.log("Unauthorized access attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { type, host, port, database, username, password } = await req.json()
+    const { type, host, port, database, username, password } = await req.json();
+    console.log("Received request body:", { type, host, port, database, username });
 
     if (!type || !host || !database) {
-      return NextResponse.json({ error: "Missing required connection parameters" }, { status: 400 })
+      console.log("Missing required connection parameters");
+      return NextResponse.json(
+        { error: "Missing required connection parameters" },
+        { status: 400 }
+      );
     }
 
     // Test the connection based on the database type
-    let connectionResult
+    let connectionResult;
 
     switch (type.toLowerCase()) {
       case "mysql":
+        console.log("Testing MySQL connection...");
         connectionResult = await testMySQLConnection({
           host,
           port: port || 3306,
           database,
           user: username,
           password,
-        })
-        break
+        });
+        break;
 
       case "postgresql":
       case "postgres":
+        console.log("Testing PostgreSQL connection...");
         connectionResult = await testPostgresConnection({
           host,
           port: port || 5432,
           database,
           user: username,
           password,
-        })
-        break
-
-      case "mongodb":
-        connectionResult = await testMongoDBConnection({
-          host,
-          port: port || 27017,
-          database,
-          username,
-          password,
-        })
-        break
+        });
+        break;
 
       default:
-        return NextResponse.json({ error: `Unsupported database type: ${type}` }, { status: 400 })
+        console.log(`Unsupported database type: ${type}`);
+        return NextResponse.json(
+          { error: `Unsupported database type: ${type}` },
+          { status: 400 }
+        );
     }
 
     if (connectionResult.success) {
-      // In a real app, you would store the connection info securely
-      // For demo purposes, we'll just return success
+      console.log("Database connection successful");
       return NextResponse.json({
         success: true,
         message: "Database connection successful",
-      })
+      });
     } else {
-      return NextResponse.json({ error: connectionResult.error }, { status: 400 })
+      console.log("Database connection failed:", connectionResult.error);
+      return NextResponse.json(
+        { error: connectionResult.error },
+        { status: 400 }
+      );
     }
   } catch (error) {
-    console.error("Database connection error:", error)
-    return NextResponse.json({ error: "Failed to connect to database" }, { status: 500 })
+    console.error("Database connection error:", error);
+    return NextResponse.json(
+      { error: "Failed to connect to database" },
+      { status: 500 }
+    );
   }
 }
 
 async function testMySQLConnection(config: any) {
   try {
-    const connection = await mysql.createConnection(config)
-    await connection.ping()
-    await connection.end()
-    return { success: true }
+    console.log("MySQL connection config:", config);
+    const connection = await mysql.createConnection(config);
+    await connection.ping();
+    await connection.end();
+    console.log("MySQL connection successful");
+    return { success: true };
   } catch (error) {
-    return { success: false, error: (error as Error).message }
+    console.error("MySQL connection error:", error);
+    return { success: false, error: (error as Error).message };
   }
 }
 
 async function testPostgresConnection(config: any) {
   try {
-    const pool = new PostgresPool(config)
-    const client = await pool.connect()
-    client.release()
-    await pool.end()
-    return { success: true }
+    console.log("PostgreSQL connection config:", config);
+    const pool = new PostgresPool(config);
+    const client = await pool.connect();
+    client.release();
+    await pool.end();
+    console.log("PostgreSQL connection successful");
+    return { success: true };
   } catch (error) {
-    return { success: false, error: (error as Error).message }
+    console.error("PostgreSQL connection error:", error);
+    return { success: false, error: (error as Error).message };
   }
 }
-
-async function testMongoDBConnection(config: any) {
-  try {
-    const { host, port, database, username, password } = config
-    const uri =
-      username && password
-        ? `mongodb://${username}:${password}@${host}:${port}/${database}`
-        : `mongodb://${host}:${port}/${database}`
-
-    const client = new MongoClient(uri)
-    await client.connect()
-    await client.db().admin().ping()
-    await client.close()
-    return { success: true }
-  } catch (error) {
-    return { success: false, error: (error as Error).message }
-  }
-}
-
