@@ -17,6 +17,8 @@ export default function Dashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [dbConnected, setDbConnected] = useState(false)
+  const [rawResponse, setRawResponse] = useState<string | null>(null)
+
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -44,10 +46,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen w-full">
       <AppSidebar />
       <SidebarInset>
-        <main className="p-4">
+        <main className="flex-1 p-4">
           <motion.div
             className="mb-6"
             initial={{ opacity: 0, y: 20 }}
@@ -59,16 +61,15 @@ export default function Dashboard() {
               Welcome back, {session.user?.name || "User"}! Convert your voice to SQL queries and visualize your data.
             </p>
           </motion.div>
-
+  
           <Tabs defaultValue={dbConnected ? "query" : "connect"} className="w-full">
             <TabsList className="mb-6">
               <TabsTrigger value="connect">Database Connection</TabsTrigger>
-              {/* <TabsTrigger value="query" disabled={!dbConnected}> */}
               <TabsTrigger value="query">
                 Voice to SQL
               </TabsTrigger>
             </TabsList>
-
+  
             <TabsContent value="connect">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
@@ -114,7 +115,7 @@ export default function Dashboard() {
                 </motion.div>
               </div>
             </TabsContent>
-
+  
             <TabsContent value="query">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
@@ -123,7 +124,7 @@ export default function Dashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <VoiceInput />
+                  <VoiceInput rawResponse={rawResponse} onRawResponseChange={setRawResponse} />
                 </motion.div>
                 <motion.div
                   className="flex-1"
@@ -131,7 +132,7 @@ export default function Dashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
                 >
-                  <VisualizationPanel />
+                  <VisualizationPanel rawResponse={rawResponse} onRawResponseChange={setRawResponse} />
                 </motion.div>
               </div>
             </TabsContent>

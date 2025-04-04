@@ -12,7 +12,14 @@ import { toast } from "@/components/ui/use-toast"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useSession } from "next-auth/react"
 
-export function VoiceInput() {
+
+export function VoiceInput({
+  rawResponse,
+  onRawResponseChange,
+}: {
+  rawResponse: string | null;
+  onRawResponseChange: (newRawResponse: string) => void;
+})  {
   const { data: session } = useSession()
   const [isRecording, setIsRecording] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -21,7 +28,7 @@ export function VoiceInput() {
   const [error, setError] = useState<string | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
-
+  // const [rawResponse, setRawResponse] = useState<string | null>(null);
   // Request microphone permissions
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -187,9 +194,16 @@ export function VoiceInput() {
           description: "Your query was executed successfully.",
         });
   
+        onRawResponseChange(JSON.stringify(data, null, 2));
+
+        console.log("rawResponse",rawResponse);
+        
+        localStorage.setItem("rawResponse", JSON.stringify(data, null, 2));
         // Log the response in the terminal
-        console.log("Query Response:", data);
+       
         localStorage.setItem("Query", query);
+
+        // window.location.href = "http://localhost:3000/dashboard/visualizations";
       } else {
         setError(data.error || "Failed to execute query. Please check your query and try again.");
       }
