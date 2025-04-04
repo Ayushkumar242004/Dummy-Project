@@ -117,7 +117,7 @@ export default function DataVisualization() {
           <DataTable />
         </TabsContent>
         <TabsContent value="charts" className="mt-6 fade-in">
-          <DataCharts data={data} />
+          <DataCharts/>
         </TabsContent>
       </Tabs>
     </div>
