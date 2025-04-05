@@ -1,13 +1,12 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MessageSquare, Send, X, Minimize, Maximize, Bot } from "lucide-react"
+import { MessageSquare, Send, X, Minimize, Maximize, Bot, Trash } from "lucide-react";
 
 export function AIChatAssistant() {
   const [isOpen, setIsOpen] = useState(false)
@@ -20,25 +19,80 @@ export function AIChatAssistant() {
     },
   ])
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return
+  const filterGeminiResponse = (text: string): string => {
+    return text
+      .replace(/\*\*/g, "")                  // Remove all double asterisks (bold)
+      .replace(/\*([^*]+)\*/g, "$1")         // Remove single asterisks used for italics/emphasis
+      .replace(/^\s*\* /gm, "- ")            // Replace bullet `*` with dash `-`
+      .replace(/\n{2,}/g, "\n")              // Collapse multiple newlines
+      .replace(/[ \t]+\n/g, "\n")            // Trim trailing spaces before newlines
+      .replace(/\n[ \t]+/g, "\n")            // Remove leading indentation after newlines
+      .trim();                               // Trim whitespace
+  };  
 
-    // Add user message
-    setMessages([...messages, { role: "user", content: message }])
-    setMessage("")
+  const handleSendMessage = async () => {
+    if (!message.trim()) return;
+  
+    const userMessage = { role: "user", content: message };
+    setMessages((prev) => [...prev, userMessage]);
+    setMessage("");
+  
+    try {
+      const requestBody = {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: message,  // Removed extra prefix for cleaner input
+              },
+            ],
+          },
+        ],
+      };
+  
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY; // Must be public if used in client-side code
+  
+      if (!apiKey) {
+        throw new Error("API key not defined in NEXT_PUBLIC_GEMINI_API_KEY");
+      }
+  
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+  
+      const data = await response.json();
+      console.log("Gemini raw response:", data);
+  
+      if (!response.ok) {
+        throw new Error(`Gemini API error: ${response.status} - ${JSON.stringify(data)}`);
+      }
+  
+      const rawGeminiReply = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "I'm sorry, I didn't understand that.";
+      const geminiReply = filterGeminiResponse(rawGeminiReply);
 
-    // Simulate AI response after a short delay
-    setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content:
-            "I can help you analyze that data. Would you like me to show you trends over time or break it down by category?",
-        },
-      ])
-    }, 1000)
-  }
+        { role: "assistant", content: geminiReply },
+      ]);
+    } catch (error) {
+      console.error("Gemini API Error:", error);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Oops! Something went wrong while contacting Gemini." },
+      ]);
+    }
+  };
+  
+  
+  
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -71,7 +125,15 @@ export function AIChatAssistant() {
       </div>
     )
   }
-
+  const handleClearMessages = () => {
+    setMessages([
+      {
+        role: "assistant",
+        content: "Hello! I'm your AI assistant. Ask me anything about your data or how to use VoiceViz.",
+      },
+    ]);
+  };
+  
   return (
     <Card className="fixed bottom-6 right-6 w-80 md:w-96 shadow-lg border border-border/50">
       <CardHeader className="py-3 flex flex-row items-center justify-between">
@@ -80,13 +142,35 @@ export function AIChatAssistant() {
           AI Assistant
         </CardTitle>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsMinimized(true)}>
-            <Minimize className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsOpen(false)}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+  <Button
+    variant="ghost"
+    size="icon"
+    className="h-7 w-7"
+    onClick={handleClearMessages}
+    title="Clear chat"
+  >
+    <Trash className="h-4 w-4" />
+  </Button>
+  <Button
+    variant="ghost"
+    size="icon"
+    className="h-7 w-7"
+    onClick={() => setIsMinimized(true)}
+    title="Minimize"
+  >
+    <Minimize className="h-4 w-4" />
+  </Button>
+  <Button
+    variant="ghost"
+    size="icon"
+    className="h-7 w-7"
+    onClick={() => setIsOpen(false)}
+    title="Close"
+  >
+    <X className="h-4 w-4" />
+  </Button>
+</div>
+
       </CardHeader>
       <CardContent className="p-4 h-80 overflow-y-auto flex flex-col gap-3">
         {messages.map((msg, index) => (
@@ -130,4 +214,3 @@ export function AIChatAssistant() {
     </Card>
   )
 }
-

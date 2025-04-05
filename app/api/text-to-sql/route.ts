@@ -10,19 +10,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { text, databaseType = "mysql" } = await req.json();
+    const { text, databaseType = "mysql", language = "English" } = await req.json();
 
     if (!text) {
       return NextResponse.json({ error: "No text provided" }, { status: 400 });
     }
 
-    // Use Gemini API to convert natural language to SQL
+    // Build Gemini prompt with language included
     const requestBody = {
       contents: [
         {
           parts: [
             {
-              text: `Convert the following natural language query to a SQL query for ${databaseType} database:\n\n"${text}"\n\nReturn only the SQL query without any explanations or markdown formatting. If Query seems incomplete then autocomplete it.`,
+              text: `The following query is written in ${language}. Translate it into English if needed, then convert it into a strict SQL query for a ${databaseType} database:\n\n"${text}"\n\nReturn only the SQL query without any explanation or markdown. Autocomplete the query if it's incomplete.`,
             },
           ],
         },
@@ -40,8 +40,8 @@ export async function POST(req: Request) {
       }
     );
 
-    console.log("Response status:", response.status);
     const responseBody = await response.text();
+    console.log("Response status:", response.status);
     console.log("Response body:", responseBody);
 
     if (!response.ok) {
@@ -49,10 +49,8 @@ export async function POST(req: Request) {
       throw new Error(`Gemini API request failed: ${responseBody}`);
     }
 
-    // Parse the response body
     const data = JSON.parse(responseBody);
 
-    // Extract the SQL query from the response
     const sqlQuery = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!sqlQuery) {
       console.error("Invalid response structure:", data);

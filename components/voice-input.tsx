@@ -28,6 +28,8 @@ export function VoiceInput({
   const [error, setError] = useState<string | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
+  const [language, setLanguage] = useState("en");
+
   // const [rawResponse, setRawResponse] = useState<string | null>(null);
   // Request microphone permissions
   useEffect(() => {
@@ -44,6 +46,20 @@ export function VoiceInput({
         })
     }
   }, [])
+
+  const languages = [
+    { code: "en", label: "English" },
+    { code: "hi", label: "Hindi" },
+    { code: "es", label: "Spanish" },
+    { code: "fr", label: "French" },
+    { code: "de", label: "German" },
+    { code: "zh", label: "Chinese" },
+    { code: "ja", label: "Japanese" },
+    { code: "ko", label: "Korean" },
+    { code: "ru", label: "Russian" },
+    { code: "pt", label: "Portuguese" },
+  ];
+  
 
   const handleStartRecording = async () => {
     setError(null)
@@ -93,7 +109,9 @@ export function VoiceInput({
       const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
       const formData = new FormData();
       formData.append("audio", audioBlob, "recording.wav");
-  
+      
+      formData.append("language", language); // add this line
+
       // Send to your backend API
       const response = await fetch("/api/speech-to-text", {
         method: "POST",
@@ -110,7 +128,7 @@ export function VoiceInput({
         setQuery(data.transcription);
   
         // Convert to SQL using OpenAI
-        await convertToSQL(data.transcription);
+        await convertToSQL(data.transcription, language);
       } else {
         setError("Could not transcribe audio. Please try again or use text input.");
       }
@@ -122,36 +140,37 @@ export function VoiceInput({
     }
   };
 
-  const convertToSQL = async (text: string) => {
+  const convertToSQL = async (text: string, language: string) => {
     try {
       const response = await fetch("/api/text-to-sql", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ text }),
-      })
-
+        body: JSON.stringify({ text, language }), // Include language here
+      });
+  
       if (!response.ok) {
-        throw new Error("Text-to-SQL conversion failed")
+        throw new Error("Text-to-SQL conversion failed");
       }
-
-      const data = await response.json()
-
+  
+      const data = await response.json();
+  
       if (data.sqlQuery) {
-        setSqlQuery(data.sqlQuery)
+        setSqlQuery(data.sqlQuery);
         toast({
           title: "Query generated",
           description: "Your voice has been converted to SQL successfully.",
-        })
+        });
       } else {
-        setError("Could not generate SQL query. Please try again with a clearer request.")
+        setError("Could not generate SQL query. Please try again with a clearer request.");
       }
     } catch (err) {
-      console.error("Error converting to SQL:", err)
-      setError("Failed to convert text to SQL. Please try again.")
+      console.error("Error converting to SQL:", err);
+      setError("Failed to convert text to SQL. Please try again.");
     }
-  }
+  };
+  
 
   const handleSubmitQuery = async () => {
     if (!query.trim()) {
@@ -254,7 +273,7 @@ export function VoiceInput({
         setQuery(data.transcription);
   
         // Convert to SQL using OpenAI
-        await convertToSQL(data.transcription);
+        await convertToSQL(data.transcription, language);
       } else {
         setError("Could not transcribe audio. Please try again or use text input.");
       }
@@ -288,6 +307,23 @@ export function VoiceInput({
           </TabsList>
 
           <TabsContent value="voice" className="space-y-4">
+          <div className="mb-4 w-full">
+  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+    Select Language
+  </label>
+  <select
+    value={language}
+    onChange={(e) => setLanguage(e.target.value)}
+    className="w-full p-2 border rounded-md dark:bg-gray-800 dark:text-white"
+  >
+    {languages.map((lang) => (
+      <option key={lang.code} value={lang.code}>
+        {lang.label}
+      </option>
+    ))}
+  </select>
+</div>
+
             <div className="flex flex-col items-center justify-center p-8">
               <div className="relative mb-6">
                 <div
