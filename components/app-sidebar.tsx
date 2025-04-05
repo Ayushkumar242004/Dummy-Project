@@ -34,16 +34,16 @@ export function AppSidebar() {
       icon: BarChart2,
       href: "/dashboard/visualizations",
     },
-    {
-      title: "Reports",
-      icon: FileText,
-      href: "/dashboard/reports",
-    },
-    {
-      title: "Uploads",
-      icon: Upload,
-      href: "/dashboard/uploads",
-    },
+    // {
+    //   title: "Reports",
+    //   icon: FileText,
+    //   href: "/dashboard/reports",
+    // },
+    // {
+    //   title: "Uploads",
+    //   icon: Upload,
+    //   href: "/dashboard/uploads",
+    // },
     {
       title: "Settings",
       icon: Settings,

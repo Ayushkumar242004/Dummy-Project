@@ -24,6 +24,9 @@ export const metadata: Metadata = {
   title: "VoiceViz - Voice to Visualization",
   description: "Transform your voice queries into powerful data visualizations",
   generator: "v0.dev",
+  icons: {
+    icon: "/icon.png", // or "/favicon.png" or ".svg"
+  },
 };
 
 export default function RootLayout({
