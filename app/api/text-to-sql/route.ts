@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         {
           parts: [
             {
-              text: `The following query is written in ${language}. Translate it into English if needed, then convert it into a strict SQL query for a ${databaseType} database:\n\n"${text}"\n\nReturn only the SQL query without any explanation or markdown. Autocomplete the query if it's incomplete.`,
+              text: `The following query is written in ${language}.Keep it in that language only, but then convert it into a strict SQL query in English for a ${databaseType} database:\n\n"${text}"\n\nReturn only the SQL query without any explanation or markdown or any special character or bullet points asterisks. Autocomplete the query if it's incomplete.`,
             },
           ],
         },

@@ -365,12 +365,12 @@ export function VoiceInput({
                   <AlertDescription>Please log in to use voice input features.</AlertDescription>
                 </Alert>
               )}
-              {query && (
+              {/* {query && (
                 <div className="mt-4 p-4 bg-muted rounded-md w-full">
                   <p className="font-medium">Recognized Query:</p>
                   <p className="text-muted-foreground">{query}</p>
                 </div>
-              )}
+              )} */}
               {sqlQuery && (
                 <div className="mt-4 p-4 bg-primary/10 rounded-md w-full">
                   <p className="font-medium">Generated SQL:</p>
@@ -384,8 +384,8 @@ export function VoiceInput({
             <Textarea
               placeholder="Enter your query here (e.g., 'Show me sales data for Q1 2023 by region')"
               className="min-h-[120px]"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={sqlQuery}
+              onChange={(e) => setSqlQuery(e.target.value)}
               disabled={!session}
             />
             <Button className="w-full" onClick={handleSubmitQuery} disabled={!query.trim() || isProcessing || !session}>
